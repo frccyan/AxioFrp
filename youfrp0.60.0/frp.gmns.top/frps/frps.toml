@@ -1,0 +1,14 @@
+bindAddr = "0.0.0.0"
+bindPort = 7000            # frps 连接端口
+kcpBindPort = 7000
+quicBindPort = 7002
+vhostHTTPPort = 81
+vhostHTTPSPort = 443
+tcpmuxHTTPConnectPort = 1337
+auth.token = "ChhChongGouToken"         # 连接 token，需要和面板一致
+webserver.addr = "0.0.0.0"  # 需要开启 web 管理
+webserver.port = 7500      # 必须设置为 7500
+webserver.user = "admin"   # 必须设置为 admin
+webserver.password = "tgx123456" # 与节点设置里一致
+John_San_Api = "http://frp.gmns.top/api/"   # 将 xxx.cn 替换成你自己的域名
+john_san_token = "ChhChongGouToken|1"  # 前面是 API Token，需要和面板一致；后面是节点 id

@@ -1,0 +1,33 @@
+{
+  "name": "axiofrp",
+  "version": "2.0.0",
+  "description": "AxioFrp - 新一代内网穿透管理分享及商业面板",
+  "author": "frccyan",
+  "license": "MIT",
+  "keywords": ["frp", "内网穿透", "管理面板", "商业化", "现代化"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/frccyan/AxioFrp.git"
+  },
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "npm run build:backend && npm run build:frontend",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "start": "docker-compose up -d",
+    "stop": "docker-compose down",
+    "lint": "npm run lint:frontend && npm run lint:backend",
+    "lint:frontend": "cd frontend && npm run lint",
+    "lint:backend": "cd backend && npm run lint",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  }
+}
