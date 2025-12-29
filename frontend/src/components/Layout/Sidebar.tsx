@@ -5,11 +5,12 @@ import {
   HomeIcon,
   ServerIcon,
   GlobeAltIcon,
-  CogIcon,
   ChartBarIcon,
   UserGroupIcon,
   XMarkIcon,
   ArrowRightOnRectangleIcon,
+  Cog6ToothIcon,
+  ActivityIcon,
 } from '@heroicons/react/24/outline';
 
 interface SidebarProps {
@@ -46,29 +47,48 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       icon: ChartBarIcon,
       current: location.pathname === '/packages',
     },
-    {
-      name: '用户管理',
-      href: '/users',
-      icon: UserGroupIcon,
-      current: location.pathname === '/users',
-      adminOnly: true,
-    },
-    {
-      name: '系统设置',
-      href: '/settings',
-      icon: CogIcon,
-      current: location.pathname === '/settings',
-    },
   ];
 
-  const filteredNavigation = navigation.filter(
-    item => !item.adminOnly || (user?.is_admin)
-  );
+  // 管理员专用菜单
+  const adminNavigation = [
+    {
+      name: '系统设置',
+      href: '/admin/settings',
+      icon: Cog6ToothIcon,
+      current: location.pathname === '/admin/settings',
+    },
+    {
+      name: '系统状态',
+      href: '/admin/system-status',
+      icon: ActivityIcon,
+      current: location.pathname === '/admin/system-status',
+    },
+  ];
 
   const handleLogout = () => {
     logout();
     onClose();
   };
+
+  const NavItem: React.FC<{ item: any }> = ({ item }) => (
+    <Link
+      to={item.href}
+      onClick={() => onClose()}
+      className={`
+        group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200
+        ${item.current
+          ? 'bg-primary-500/10 text-primary-400 border-l-2 border-primary-500'
+          : 'text-gray-400 hover:text-white hover:bg-white/5'
+        }
+      `}
+    >
+      <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
+      {item.name}
+      {item.current && (
+        <div className="ml-auto w-2 h-2 bg-primary-500 rounded-full"></div>
+      )}
+    </Link>
+  );
 
   return (
     <>
@@ -101,84 +121,75 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-white">AxioFrp</h1>
-                <p class="text-xs text-gray-500">内网穿透管理平台</p>
+                <p className="text-xs text-gray-400">管理面板</p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="lg:hidden p-2 rounded-lg text-gray-400 hover:text-white hover:bg-dark-800 transition-colors"
+              className="lg:hidden p-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/5"
             >
-              <XMarkIcon className="w-5 h-5" />
+              <XMarkIcon className="h-5 w-5" />
             </button>
           </div>
 
-          {/* 用户信息 */}
-          {user && (
-            <div className="p-4 border-b border-dark-800">
-              <div className="flex items-center space-x-3">
-                <div className="relative">
-                  <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-accent-500 rounded-full flex items-center justify-center">
-                    <span className="text-white font-semibold">
-                      {user.username.charAt(0).toUpperCase()}
+          {/* 用户信息区域 */}
+          <div className="p-4 border-b border-dark-800">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                <span className="text-white font-semibold">
+                  {user?.username?.charAt(0).toUpperCase()}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white truncate">
+                  {user?.username}
+                </p>
+                <p className="text-xs text-gray-400 truncate">
+                  {user?.email}
+                  {user?.is_admin && (
+                    <span className="ml-2 px-2 py-0.5 bg-primary-500/20 text-primary-400 text-xs rounded-full">
+                      管理员
                     </span>
-                  </div>
-                  {user.is_admin && (
-                    <div className="absolute -bottom-1 -right-1 bg-warning-500 rounded-full p-1">
-                      <CogIcon className="w-3 h-3 text-white" />
-                    </div>
                   )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">
-                    {user.username}
-                  </p>
-                  <p className="text-xs text-gray-400 truncate">
-                    {user.group_name || '普通用户'}
-                  </p>
-                </div>
+                </p>
               </div>
             </div>
-          )}
+          </div>
 
           {/* 导航菜单 */}
-          <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-            {filteredNavigation.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  onClick={onClose}
-                  className={`
-                    nav-link group ${item.current ? 'active' : ''}
-                  `}
-                >
-                  <Icon
-                    className={`
-                      mr-3 h-5 w-5 flex-shrink-0
-                      ${item.current 
-                        ? 'text-primary-400' 
-                        : 'text-gray-400 group-hover:text-gray-300'
-                      }
-                    `}
-                  />
-                  {item.name}
-                </Link>
-              );
-            })}
+          <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+            {/* 主要功能 */}
+            <div className="mb-6">
+              <h3 className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                主要功能
+              </h3>
+              {navigation.map((item) => (
+                <NavItem key={item.name} item={item} />
+              ))}
+            </div>
+
+            {/* 管理员功能 */}
+            {user?.is_admin && (
+              <div>
+                <h3 className="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                  系统管理
+                </h3>
+                {adminNavigation.map((item) => (
+                  <NavItem key={item.name} item={item} />
+                ))}
+              </div>
+            )}
           </nav>
 
-          {/* 底部操作 */}
-          <div className="p-4 border-t border-dark-800">
-            {user && (
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg text-gray-300 hover:bg-dark-800 hover:text-danger-400 transition-all duration-200 group"
-              >
-                <ArrowRightOnRectangleIcon className="mr-3 h-5 w-5 text-gray-400 group-hover:text-danger-400" />
-                退出登录
-              </button>
-            )}
+          {/* 底部操作区域 */}
+          <div className="p-3 border-t border-dark-800">
+            <button
+              onClick={handleLogout}
+              className="w-full group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg text-gray-400 hover:text-white hover:bg-red-500/10 transition-all duration-200"
+            >
+              <ArrowRightOnRectangleIcon className="mr-3 h-5 w-5 flex-shrink-0" />
+              退出登录
+            </button>
           </div>
         </div>
       </div>

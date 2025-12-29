@@ -7,6 +7,7 @@ import proxyRoutes from './routes/proxy.js';
 import userRoutes from './routes/user.js';
 import nodeRoutes from './routes/node.js';
 import packageRoutes from './routes/package.js';
+import configRoutes from './routes/config.js';
 import db from './config/database.js';
 
 const app = express();
@@ -55,6 +56,7 @@ app.use('/api/proxies', proxyRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/nodes', nodeRoutes);
 app.use('/api/packages', packageRoutes);
+app.use('/api/config', configRoutes);
 
 // 404处理
 app.use('*', (req, res) => {
