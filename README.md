@@ -86,6 +86,7 @@ axiofrp/
 ├── 🐳 docker-compose.yml     # 容器编排
 ├── 🗄️ init.sql              # 数据库初始化
 ├── ⚙️ .env.example          # 环境变量模板
+├── 📋 CONFIG_GUIDE.md       # 详细配置指南
 └── 📖 README.md
 ```
 
@@ -116,6 +117,12 @@ npm run install:all
 cp .env.example .env
 # 编辑 .env 文件配置数据库等信息
 ```
+
+⚠️ **重要配置项**：
+- 📊 **数据库配置**: 修改 `DB_PASSWORD` 为你的MySQL密码
+- 📧 **邮件配置**: 配置SMTP服务以启用邮箱验证注册
+- 🔐 **安全配置**: 修改 `JWT_SECRET` 为强密钥
+- 📖 **详细配置指南**: 查看 [CONFIG_GUIDE.md](./CONFIG_GUIDE.md)
 
 4. **启动开发服务**
 ```bash
@@ -157,6 +164,8 @@ docker-compose down
 - 📊 **数据统计**: 流量统计、使用分析
 - 💰 **商业功能**: 套餐购买、计费系统
 - 🔐 **安全保障**: JWT认证、数据加密
+- 📧 **邮件验证**: 可选的邮箱验证注册功能
+- ⚙️ **灵活配置**: 详细的系统配置选项
 
 ### 🎨 界面特性
 
