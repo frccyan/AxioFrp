@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AxioFrp 配置向导</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        .steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            position: relative;
+        }
+        
+        .steps::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 40px;
+            right: 40px;
+            height: 2px;
+            background: #e0e0e0;
+            z-index: 0;
+        }
+        
+        .step {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            flex: 1;
+        }
+        
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-weight: bold;
+        }
+        
+        .step.active .step-number {
+            background: #667eea;
+        }
+        
+        .step.completed .step-number {
+            background: #4caf50;
+        }
+        
+        .step-title {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .form-section {
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        .form-section.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+        
+        .help-text {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .progress-bar {
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            transition: width 0.3s;
+            width: 0%;
+        }
+        
+        .result-section {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .success-icon {
+            font-size: 4rem;
+            color: #4caf50;
+            margin-bottom: 20px;
+        }
+        
+        .config-preview {
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: left;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        
+        .copy-btn {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .copy-btn:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">AxioFrp</div>
+            <div class="subtitle">现代化内网穿透管理面板 - 配置向导</div>
+        </div>
+        
+        <div class="steps">
+            <div class="step active" data-step="1">
+                <div class="step-number">1</div>
+                <div class="step-title">数据库配置</div>
+            </div>
+            <div class="step" data-step="2">
+                <div class="step-number">2</div>
+                <div class="step-title">邮件配置</div>
+            </div>
+            <div class="step" data-step="3">
+                <div class="step-number">3</div>
+                <div class="step-title">应用设置</div>
+            </div>
+            <div class="step" data-step="4">
+                <div class="step-number">4</div>
+                <div class="step-title">完成配置</div>
+            </div>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+        
+        <!-- 步骤1: 数据库配置 -->
+        <div class="form-section active" data-section="1">
+            <h2>📊 数据库配置</h2>
+            <p style="color: #666; margin-bottom: 20px;">配置MySQL数据库连接信息</p>
+            
+            <div class="form-group">
+                <label for="dbHost">数据库主机</label>
+                <input type="text" id="dbHost" value="mysql" placeholder="数据库服务器地址">
+                <div class="help-text">Docker环境中通常使用容器名称</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="dbPort">数据库端口</label>
+                <input type="number" id="dbPort" value="3306" placeholder="3306">
+            </div>
+            
+            <div class="form-group">
+                <label for="dbName">数据库名称</label>
+                <input type="text" id="dbName" value="axiofrp" placeholder="axiofrp">
+            </div>
+            
+            <div class="form-group">
+                <label for="dbUser">数据库用户名</label>
+                <input type="text" id="dbUser" value="axiofrp_user" placeholder="数据库用户名">
+            </div>
+            
+            <div class="form-group">
+                <label for="dbPassword">数据库密码</label>
+                <input type="password" id="dbPassword" placeholder="点击生成随机密码">
+                <div class="help-text">
+                    <button type="button" onclick="generatePassword('dbPassword')" style="background: #667eea; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">生成随机密码</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 步骤2: 邮件配置 -->
+        <div class="form-section" data-section="2">
+            <h2>📧 邮件配置</h2>
+            <p style="color: #666; margin-bottom: 20px;">配置SMTP邮件服务用于用户注册验证（可选）</p>
+            
+            <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="enableEmail">
+                    <label for="enableEmail" style="margin: 0;">启用邮件验证功能</label>
+                </div>
+            </div>
+            
+            <div id="emailSettings" style="display: none;">
+                <div class="form-group">
+                    <label for="smtpHost">SMTP服务器</label>
+                    <select id="smtpHost">
+                        <option value="smtp.gmail.com">Gmail (smtp.gmail.com)</option>
+                        <option value="smtp.qq.com">QQ邮箱 (smtp.qq.com)</option>
+                        <option value="smtp.163.com">163邮箱 (smtp.163.com)</option>
+                        <option value="smtp-mail.outlook.com">Outlook (smtp-mail.outlook.com)</option>
+                        <option value="custom">自定义</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="customSmtpHost" style="display: none;">
+                    <label for="customSmtpHostInput">自定义SMTP服务器</label>
+                    <input type="text" id="customSmtpHostInput" placeholder="smtp.yourserver.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="smtpPort">SMTP端口</label>
+                    <input type="number" id="smtpPort" value="587" placeholder="587">
+                </div>
+                
+                <div class="form-group">
+                    <label for="smtpUser">邮箱地址</label>
+                    <input type="email" id="smtpUser" placeholder="your@email.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="smtpPass">邮箱密码/授权码</label>
+                    <input type="password" id="smtpPass" placeholder="邮箱密码或应用专用密码">
+                    <div class="help-text">Gmail需要使用应用专用密码，QQ/163邮箱需要使用授权码</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 步骤3: 应用设置 -->
+        <div class="form-section" data-section="3">
+            <h2>⚙️ 应用设置</h2>
+            <p style="color: #666; margin-bottom: 20px;">配置应用基本信息和用户限制</p>
+            
+            <div class="form-group">
+                <label for="frontendUrl">前端访问地址</label>
+                <input type="text" id="frontendUrl" value="http://localhost" placeholder="http://localhost">
+            </div>
+            
+            <div class="form-group">
+                <label for="backendPort">后端服务端口</label>
+                <input type="number" id="backendPort" value="8000" placeholder="8000">
+            </div>
+            
+            <div class="form-group">
+                <label for="frontendPort">前端服务端口</label>
+                <input type="number" id="frontendPort" value="3000" placeholder="3000">
+            </div>
+            
+            <div class="form-group">
+                <label for="jwtSecret">JWT密钥</label>
+                <input type="password" id="jwtSecret" placeholder="点击生成安全密钥">
+                <div class="help-text">
+                    <button type="button" onclick="generatePassword('jwtSecret')" style="background: #667eea; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer;">生成随机密钥</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="maxProxies">每个用户最大隧道数</label>
+                <input type="number" id="maxProxies" value="10" placeholder="10">
+            </div>
+            
+            <div class="form-group">
+                <label for="defaultTraffic">默认流量限制 (GB)</label>
+                <input type="number" id="defaultTraffic" value="1" placeholder="1">
+                <div class="help-text">新用户默认可使用的流量限制</div>
+            </div>
+        </div>
+        
+        <!-- 步骤4: 完成配置 -->
+        <div class="form-section" data-section="4">
+            <div class="result-section">
+                <div class="success-icon">✅</div>
+                <h2>🎉 配置完成！</h2>
+                <p style="color: #666; margin-bottom: 20px;">您的AxioFrp配置已生成完成</p>
+                
+                <div class="config-preview" id="configPreview">
+                    <!-- 配置内容将在这里显示 -->
+                </div>
+                
+                <button class="copy-btn" onclick="copyConfig()">📋 复制配置</button>
+                <br><br>
+                <button class="btn btn-primary" onclick="downloadConfig()">📥 下载配置文件</button>
+                <button class="btn btn-secondary" onclick="startDeployment()">🚀 开始部署</button>
+            </div>
+        </div>
+        
+        <div class="buttons">
+            <button class="btn btn-secondary" id="prevBtn" onclick="changeStep(-1)" disabled>上一步</button>
+            <button class="btn btn-primary" id="nextBtn" onclick="changeStep(1)">下一步</button>
+        </div>
+    </div>
+    
+    <script>
+        let currentStep = 1;
+        const totalSteps = 4;
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStepDisplay();
+            
+            // 邮件配置切换
+            document.getElementById('enableEmail').addEventListener('change', function() {
+                const emailSettings = document.getElementById('emailSettings');
+                emailSettings.style.display = this.checked ? 'block' : 'none';
+            });
+            
+            // SMTP服务器选择
+            document.getElementById('smtpHost').addEventListener('change', function() {
+                const customHost = document.getElementById('customSmtpHost');
+                customHost.style.display = this.value === 'custom' ? 'block' : 'none';
+            });
+            
+            // 自动生成默认密码
+            if (!document.getElementById('dbPassword').value) {
+                generatePassword('dbPassword');
+            }
+            if (!document.getElementById('jwtSecret').value) {
+                generatePassword('jwtSecret');
+            }
+        });
+        
+        function updateStepDisplay() {
+            // 更新步骤指示器
+            document.querySelectorAll('.step').forEach(step => {
+                const stepNum = parseInt(step.dataset.step);
+                step.classList.remove('active', 'completed');
+                if (stepNum === currentStep) {
+                    step.classList.add('active');
+                } else if (stepNum < currentStep) {
+                    step.classList.add('completed');
+                }
+            });
+            
+            // 更新表单区域
+            document.querySelectorAll('.form-section').forEach(section => {
+                section.classList.remove('active');
+                if (parseInt(section.dataset.section) === currentStep) {
+                    section.classList.add('active');
+                }
+            });
+            
+            // 更新进度条
+            const progress = ((currentStep - 1) / (totalSteps - 1)) * 100;
+            document.querySelector('.progress-fill').style.width = progress + '%';
+            
+            // 更新按钮状态
+            document.getElementById('prevBtn').disabled = currentStep === 1;
+            const nextBtn = document.getElementById('nextBtn');
+            if (currentStep === totalSteps) {
+                nextBtn.textContent = '完成';
+                nextBtn.onclick = showConfig;
+            } else {
+                nextBtn.textContent = '下一步';
+                nextBtn.onclick = () => changeStep(1);
+            }
+        }
+        
+        function changeStep(direction) {
+            const newStep = currentStep + direction;
+            if (newStep >= 1 && newStep <= totalSteps) {
+                currentStep = newStep;
+                updateStepDisplay();
+            }
+        }
+        
+        function generatePassword(fieldId) {
+            const length = fieldId === 'jwtSecret' ? 64 : 32;
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+            let password = '';
+            for (let i = 0; i < length; i++) {
+                password += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            document.getElementById(fieldId).value = password;
+        }
+        
+        function collectConfig() {
+            const config = {
+                database: {
+                    host: document.getElementById('dbHost').value,
+                    port: document.getElementById('dbPort').value,
+                    name: document.getElementById('dbName').value,
+                    user: document.getElementById('dbUser').value,
+                    password: document.getElementById('dbPassword').value
+                },
+                email: {
+                    enabled: document.getElementById('enableEmail').checked,
+                    host: document.getElementById('smtpHost').value === 'custom' ? 
+                          document.getElementById('customSmtpHostInput').value : 
+                          document.getElementById('smtpHost').value,
+                    port: document.getElementById('smtpPort').value,
+                    user: document.getElementById('smtpUser').value,
+                    password: document.getElementById('smtpPass').value
+                },
+                application: {
+                    frontendUrl: document.getElementById('frontendUrl').value,
+                    backendPort: document.getElementById('backendPort').value,
+                    frontendPort: document.getElementById('frontendPort').value,
+                    jwtSecret: document.getElementById('jwtSecret').value,
+                    maxProxies: document.getElementById('maxProxies').value,
+                    defaultTraffic: document.getElementById('defaultTraffic').value
+                }
+            };
+            return config;
+        }
+        
+        function generateEnvConfig(config) {
+            let envContent = `# AxioFrp 自动生成的配置文件
+# 生成时间: ${new Date().toLocaleString()}
+
+# 数据库配置
+DB_HOST=${config.database.host}
+DB_PORT=${config.database.port}
+DB_NAME=${config.database.name}
+DB_USER=${config.database.user}
+DB_PASSWORD=${config.database.password}
+
+# Redis配置
+REDIS_URL=redis://redis:6379
+
+# JWT配置
+JWT_SECRET=${config.application.jwtSecret}
+JWT_EXPIRES_IN=7d
+
+# 应用配置
+NODE_ENV=production
+PORT=8000
+
+# 前端配置
+FRONTEND_URL=${config.application.frontendUrl}:${config.application.frontendPort}`;
+
+            if (config.email.enabled) {
+                envContent += `
+
+# 邮件配置
+SMTP_HOST=${config.email.host}
+SMTP_PORT=${config.email.port}
+SMTP_USER=${config.email.user}
+SMTP_PASS=${config.email.password}`;
+            } else {
+                envContent += `
+
+# 邮件配置（未启用）
+# SMTP_HOST=
+# SMTP_PORT=587
+# SMTP_USER=
+# SMTP_PASS=`;
+            }
+
+            envContent += `
+
+# 系统配置
+MAX_PROXIES_PER_USER=${config.application.maxProxies}
+DEFAULT_TRAFFIC_LIMIT=${config.application.defaultTraffic * 1024 * 1024 * 1024}`;
+
+            return envContent;
+        }
+        
+        function showConfig() {
+            const config = collectConfig();
+            const envConfig = generateEnvConfig(config);
+            
+            document.getElementById('configPreview').textContent = envConfig;
+            
+            currentStep = 4;
+            updateStepDisplay();
+        }
+        
+        function copyConfig() {
+            const configText = document.getElementById('configPreview').textContent;
+            navigator.clipboard.writeText(configText).then(() => {
+                alert('配置已复制到剪贴板！');
+            });
+        }
+        
+        function downloadConfig() {
+            const config = collectConfig();
+            const envConfig = generateEnvConfig(config);
+            
+            const blob = new Blob([envConfig], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '.env';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+        
+        function startDeployment() {
+            alert('配置已准备完成！请按照以下步骤进行部署：\n\n1. 下载配置文件到项目根目录\n2. 运行: docker-compose up -d\n3. 访问: http://localhost:3000');
+        }
+    </script>
+</body>
+</html>

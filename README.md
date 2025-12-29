@@ -87,6 +87,10 @@ axiofrp/
 ├── 🗄️ init.sql              # 数据库初始化
 ├── ⚙️ .env.example          # 环境变量模板
 ├── 📋 CONFIG_GUIDE.md       # 详细配置指南
+├── 🔧 install.sh            # Linux/macOS 一键安装脚本
+├── 🔧 install.ps1           # Windows 一键安装脚本
+├── 🌐 setup/                 # Web配置界面
+│   └── 📄 index.html
 └── 📖 README.md
 ```
 
@@ -112,7 +116,25 @@ cd AxioFrp
 npm run install:all
 ```
 
-3. **环境配置**
+3. **环境配置（推荐使用自动配置）**
+
+#### 🎯 方式一: 一键配置脚本
+```bash
+# Linux/macOS
+./install.sh
+
+# Windows
+./install.ps1
+```
+
+#### 🎯 方式二: Web配置界面
+```bash
+# 启动配置界面
+python -m http.server 8080
+# 访问 http://localhost:8080/setup
+```
+
+#### 🎯 方式三: 手动配置
 ```bash
 cp .env.example .env
 # 编辑 .env 文件配置数据库等信息
@@ -136,7 +158,51 @@ npm run dev:frontend  # 前端: http://localhost:3000
 
 ### 🚢 生产部署
 
-1. **Docker 部署（推荐）**
+#### 🎯 方式一: 一键安装部署（推荐）
+
+**Linux/macOS:**
+```bash
+# 运行一键安装脚本
+./install.sh
+
+# 管理服务
+./manage.sh start    # 启动服务
+./manage.sh stop     # 停止服务
+./manage.sh status   # 查看状态
+./manage.sh logs     # 查看日志
+./manage.sh backup   # 备份数据
+```
+
+**Windows:**
+```bash
+# 运行PowerShell安装脚本
+./install.ps1
+
+# 管理服务
+./manage.ps1 start
+./manage.ps1 stop
+./manage.ps1 status
+./manage.ps1 logs
+./manage.ps1 backup
+```
+
+#### 🎯 方式二: Web界面配置
+
+1. 启动配置界面:
+```bash
+python -m http.server 8080
+```
+
+2. 访问 `http://localhost:8080/setup` 进行可视化配置
+
+3. 下载配置文件后部署:
+```bash
+docker-compose up -d
+```
+
+#### 🎯 方式三: 传统Docker部署
+
+1. **手动配置后部署**
 ```bash
 # 一键部署
 docker-compose up -d
