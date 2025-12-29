@@ -1,0 +1,85 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Extract version
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Create release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: AxioFrp v${{ steps.version.outputs.VERSION }}
+          body: |
+            ## AxioFrp v${{ steps.version.outputs.VERSION }}
+            
+            ### 🚀 新特性
+            - 🎛️ 管理后台配置系统
+            - 📊 实时配置更新
+            - 📧 邮件配置在线测试
+            - 📈 配置历史和回滚
+            
+            ### 🐳 Docker 镜像
+            - **Backend**: `ghcr.io/frccyan/AxioFrp-backend:v${{ steps.version.outputs.VERSION }}`
+            - **Frontend**: `ghcr.io/frccyan/AxioFrp-frontend:v${{ steps.version.outputs.VERSION }}`
+            
+            ### 🚀 快速部署
+            ```bash
+            # 使用 Docker Compose
+            curl -fsSL https://raw.githubusercontent.com/frccyan/AxioFrp/main/docker-compose.yml -o docker-compose.yml
+            
+            # 设置版本
+            sed -i "s/:latest/:v${{ steps.version.outputs.VERSION }}/g" docker-compose.yml
+            
+            # 启动服务
+            docker-compose up -d
+            ```
+            
+            ### 📋 更新内容
+            - 完整的管理后台配置系统
+            - 优化的Docker构建流程
+            - GitHub Actions自动化CI/CD
+            - 增强的安全性和性能
+          draft: false
+          prerelease: false
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ghcr.io/frccyan/AxioFrp-backend:latest
+            ghcr.io/frccyan/AxioFrp-backend:v${{ steps.version.outputs.VERSION }}
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            ghcr.io/frccyan/AxioFrp-frontend:latest
+            ghcr.io/frccyan/AxioFrp-frontend:v${{ steps.version.outputs.VERSION }}

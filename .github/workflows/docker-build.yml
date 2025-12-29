@@ -1,0 +1,221 @@
+name: Build and Push Docker Images
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # 代码质量检查
+  quality-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Type check backend
+        run: |
+          cd backend
+          npm run type-check
+
+      - name: Type check frontend
+        run: |
+          cd frontend
+          npm run type-check
+
+      - name: Lint backend
+        run: |
+          cd backend
+          npm run lint
+
+      - name: Lint frontend
+        run: |
+          cd frontend
+          npm run lint
+
+  # 构建 Docker 镜像
+  build-images:
+    needs: quality-check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      matrix:
+        service: [backend, frontend]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-${{ matrix.service }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./${{ matrix.service }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # 安全扫描
+  security-scan:
+    needs: build-images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:main
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # 集成测试
+  integration-test:
+    needs: build-images
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: test_password
+          MYSQL_DATABASE: axiofrp_test
+          MYSQL_USER: test_user
+          MYSQL_PASSWORD: test_password
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+        ports:
+          - 3306:3306
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Wait for services to be ready
+        run: |
+          sleep 10
+
+      - name: Test database connection
+        run: |
+          mysql -h127.0.0.1 -P3306 -utest_user -ptest_password axiofrp_test -e "SELECT 1"
+
+      - name: Test Redis connection
+        run: |
+          redis-cli -h 127.0.0.1 -p 6379 ping
+
+  # 部署到测试环境
+  deploy-test:
+    needs: [build-images, integration-test]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: staging
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to staging
+        run: |
+          echo "Deploying to staging environment..."
+          # 这里可以添加实际的部署脚本
+
+      - name: Run smoke tests
+        run: |
+          echo "Running smoke tests..."
+          # 这里可以添加烟雾测试
+
+  # 发布通知
+  notify:
+    needs: [deploy-test]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Notify on success
+        if: needs.deploy-test.result == 'success'
+        run: |
+          echo "✅ Docker images built and deployed successfully!"
+          echo "Backend: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:main"
+          echo "Frontend: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:main"
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "❌ Build or deployment failed!"
+          echo "Check the workflow logs for details."

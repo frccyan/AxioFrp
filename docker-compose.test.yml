@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  # MySQL 测试数据库
+  mysql-test:
+    image: mysql:8.0
+    container_name: axiofrp-mysql-test
+    environment:
+      MYSQL_ROOT_PASSWORD: axiofrp_root_password
+      MYSQL_DATABASE: axiofrp_test
+      MYSQL_USER: axiofrp_user
+      MYSQL_PASSWORD: axiofrp_password
+    volumes:
+      - mysql_test_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/1-init.sql
+      - ./init_settings.sql:/docker-entrypoint-initdb.d/2-init_settings.sql
+    ports:
+      - "3307:3306"
+    networks:
+      - axiofrp-test-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Redis 测试缓存
+  redis-test:
+    image: redis:7-alpine
+    container_name: axiofrp-redis-test
+    ports:
+      - "6380:6379"
+    networks:
+      - axiofrp-test-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      timeout: 10s
+      retries: 5
+
+  # 后端测试服务
+  backend-test:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: axiofrp-backend-test
+    environment:
+      NODE_ENV: test
+      DB_HOST: mysql-test
+      DB_PORT: 3306
+      DB_NAME: axiofrp_test
+      DB_USER: axiofrp_user
+      DB_PASSWORD: axiofrp_password
+      REDIS_URL: redis://redis-test:6379
+      JWT_SECRET: test_jwt_secret_key_for_testing_only
+      API_PORT: 8001
+    ports:
+      - "8001:8001"
+    depends_on:
+      mysql-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+    networks:
+      - axiofrp-test-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      timeout: 30s
+      retries: 3
+      interval: 10s
+
+  # 前端测试服务
+  frontend-test:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: axiofrp-frontend-test
+    environment:
+      REACT_APP_API_URL: http://localhost:8001
+    ports:
+      - "3001:3000"
+    depends_on:
+      - backend-test
+    networks:
+      - axiofrp-test-network
+
+volumes:
+  mysql_test_data:
+
+networks:
+  axiofrp-test-network:
+    driver: bridge

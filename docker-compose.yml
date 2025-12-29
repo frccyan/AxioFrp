@@ -12,7 +12,8 @@ services:
       MYSQL_PASSWORD: axiofrp_password
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./init.sql:/docker-entrypoint-initdb.d/1-init.sql
+      - ./init_settings.sql:/docker-entrypoint-initdb.d/2-init_settings.sql
     ports:
       - "3306:3306"
     networks:
