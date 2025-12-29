@@ -235,11 +235,11 @@ export class ConfigService {
             ORDER BY created_at DESC 
             LIMIT ? OFFSET ?
         `;
-        const history = await this.db.query(historyQuery, [key, limit, offset]);
+        const history = await db.query(historyQuery, [key, limit, offset]);
 
         // 获取总数
         const countQuery = 'SELECT COUNT(*) as total FROM config_history WHERE setting_key = ?';
-        const countResult = await this.db.query(countQuery, [key]);
+        const countResult = await db.query(countQuery, [key]);
         const total = countResult[0].total;
 
         return {
@@ -359,7 +359,7 @@ export class ConfigService {
      */
     private async getConfig(key: string): Promise<ConfigItem | null> {
         const query = 'SELECT * FROM settings WHERE setting_key = ?';
-        const results = await this.db.query(query, [key]);
+        const results = await db.query(query, [key]);
         return results.length > 0 ? results[0] : null;
     }
 

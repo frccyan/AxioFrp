@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth.js';
 import proxyService from '../services/ProxyService.js';
+import db from '../config/database.js';
 
 export class ProxyController {
   /**
@@ -293,8 +294,8 @@ export class ProxyController {
         LIMIT ? OFFSET ?
       `;
 
-      const proxies = await proxyService.query(sql, whereClause ? params.slice(0, -2) : params);
-      const totalResult = await proxyService.queryOne<{ total: number }>(`
+      const proxies = await db.query<Proxy>(sql, whereClause ? params.slice(0, -2) : params);
+      const totalResult = await db.queryOne<{ total: number }>(`
         SELECT COUNT(*) as total FROM proxies p ${whereClause}
       `, username ? [username] : []);
 
@@ -315,17 +316,6 @@ export class ProxyController {
         message: '获取隧道列表失败'
       });
     }
-  }
-
-  // 临时方法，等待数据库服务完善
-  private async query(sql: string, params: any[]): Promise<any[]> {
-    // 这里需要调用数据库服务
-    return [];
-  }
-
-  private async queryOne<T>(sql: string, params: any[]): Promise<T | null> {
-    // 这里需要调用数据库服务
-    return null;
   }
 }
 

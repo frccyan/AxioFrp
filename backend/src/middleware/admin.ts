@@ -15,8 +15,8 @@ export class AdminMiddleware {
                 });
             }
 
-            const query = 'SELECT is_admin FROM users WHERE username = ?';
-            const results = await Database.query(query, [req.user.username]);
+            const _query = 'SELECT is_admin FROM users WHERE username = ?';
+            const results = await Database.query(_query, [req.user.username]);
 
             if (results.length === 0) {
                 return res.status(401).json({
@@ -53,8 +53,8 @@ export class AdminMiddleware {
                 return next();
             }
 
-            const query = 'SELECT is_admin FROM users WHERE username = ?';
-            const results = await Database.query(query, [req.user.username]);
+            const _query = 'SELECT is_admin FROM users WHERE username = ?';
+            const results = await Database.query(_query, [req.user.username]);
 
             if (results.length > 0) {
                 req.user.is_admin = results[0].is_admin;

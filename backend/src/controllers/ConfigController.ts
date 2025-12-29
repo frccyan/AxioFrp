@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth.js';
 import { ConfigService } from '../services/ConfigService.js';
-import { EmailService } from '../services/EmailService.js';
+import { EmailService, EmailConfig } from '../services/EmailService.js';
 
 export class ConfigController {
     private configService: ConfigService;
@@ -206,7 +206,7 @@ export class ConfigController {
             const emailConfig = await this.configService.getEmailConfig();
 
             // 临时更新邮件配置进行测试
-            this.emailService.updateConfig(emailConfig);
+            this.emailService.updateConfig(emailConfig as unknown as EmailConfig);
 
             // 发送测试邮件
             const testResult = await this.emailService.sendTestEmail(to);
