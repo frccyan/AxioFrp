@@ -1,5 +1,5 @@
-import { Database } from '../config/database';
-import { Validator } from '../utils/Validator';
+import db from '../config/database.js';
+import { Validator } from '../utils/Validator.js';
 
 export interface ConfigItem {
     setting_key: string;
@@ -55,11 +55,9 @@ export interface SystemStatus {
 }
 
 export class ConfigService {
-    private db: Database;
     private validator: Validator;
 
     constructor() {
-        this.db = Database.getInstance();
         this.validator = new Validator();
     }
 
@@ -72,7 +70,7 @@ export class ConfigService {
             WHERE is_editable = TRUE 
             ORDER BY config_type, category, display_order
         `;
-        const results = await this.db.query(query);
+        const results = await db.query(query);
 
         // 按分类组织配置
         const categories = this.organizeConfigs(results);
@@ -88,7 +86,7 @@ export class ConfigService {
             WHERE category = ? AND is_editable = TRUE 
             ORDER BY display_order
         `;
-        const results = await this.db.query(query, [category]);
+        const results = await db.query(query, [category]);
         return results;
     }
 
@@ -97,7 +95,7 @@ export class ConfigService {
      */
     public async getAllConfigs(): Promise<ConfigItem[]> {
         const query = 'SELECT * FROM settings ORDER BY config_type, category, display_order';
-        const results = await this.db.query(query);
+        const results = await db.query(query);
         return results;
     }
 
@@ -110,7 +108,7 @@ export class ConfigService {
         
         // 更新配置
         const query = 'UPDATE settings SET setting_value = ?, updated_at = NOW() WHERE setting_key = ?';
-        await this.db.query(query, [value, key]);
+        await db.query(query, [value, key]);
 
         return {
             key,
@@ -207,7 +205,7 @@ export class ConfigService {
             INSERT INTO config_history (setting_key, new_value, changed_by, change_reason)
             VALUES (?, ?, ?, ?)
         `;
-        await this.db.query(query, [key, value, username, reason]);
+        await db.query(query, [key, value, username, reason]);
     }
 
     /**

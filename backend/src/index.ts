@@ -41,7 +41,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // 健康检查路由
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.json({
     success: true,
     message: 'AxioFrp API 服务运行正常',
@@ -59,7 +59,7 @@ app.use('/api/packages', packageRoutes);
 app.use('/api/config', configRoutes);
 
 // 404处理
-app.use('*', (req, res) => {
+app.use('*', (_req, res) => {
   res.status(404).json({
     success: false,
     message: '接口不存在'
@@ -67,9 +67,9 @@ app.use('*', (req, res) => {
 });
 
 // 全局错误处理
-app.use((error: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((error: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   console.error('全局错误:', error);
-  
+
   res.status(error.status || 500).json({
     success: false,
     message: process.env.NODE_ENV === 'production' 

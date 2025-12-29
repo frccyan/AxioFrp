@@ -26,8 +26,9 @@ export class UserService {
     ];
     
     const result = await db.execute(sql, params);
-    
-    return this.getUserById(result[0].insertId);
+
+    const insertId = (result[0] as any)?.insertId;
+    return this.getUserById(insertId);
   }
 
   /**

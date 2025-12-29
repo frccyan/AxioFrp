@@ -26,7 +26,8 @@ export class ProxyService {
     ];
     
     const result = await db.execute(sql, params);
-    return this.getProxyById(result[0].insertId);
+    const insertId = (result[0] as any)?.insertId;
+    return this.getProxyById(insertId);
   }
 
   /**

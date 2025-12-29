@@ -6,7 +6,7 @@ export class ProxyController {
   /**
    * 获取用户隧道列表
    */
-  async getUserProxies(req: AuthRequest, res: Response) {
+  async getUserProxies(req: AuthRequest, res: Response): Promise<void> {
     try {
       const { username } = req.user;
       const proxies = await proxyService.getUserProxies(username);
@@ -26,7 +26,7 @@ export class ProxyController {
   /**
    * 创建隧道
    */
-  async createProxy(req: AuthRequest, res: Response) {
+  async createProxy(req: AuthRequest, res: Response): Promise<void> {
     try {
       const { username } = req.user;
       const {
@@ -40,10 +40,11 @@ export class ProxyController {
       } = req.body;
 
       if (!proxy_name || !proxy_type || !local_ip || !local_port || !node_id) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: '必填字段不能为空'
         });
+        return;
       }
 
       const proxy = await proxyService.createProxy({
@@ -73,7 +74,7 @@ export class ProxyController {
   /**
    * 更新隧道
    */
-  async updateProxy(req: AuthRequest, res: Response) {
+  async updateProxy(req: AuthRequest, res: Response): Promise<void> {
     try {
       const { id } = req.params;
       const updateData = req.body;
@@ -81,17 +82,19 @@ export class ProxyController {
       // 检查隧道是否属于当前用户
       const proxy = await proxyService.getProxyById(parseInt(id));
       if (!proxy) {
-        return res.status(404).json({
+        res.status(404).json({
           success: false,
           message: '隧道不存在'
         });
+        return;
       }
 
       if (proxy.username !== req.user.username) {
-        return res.status(403).json({
+        res.status(403).json({
           success: false,
           message: '无权操作此隧道'
         });
+        return;
       }
 
       const updatedProxy = await proxyService.updateProxy(parseInt(id), updateData);
@@ -112,24 +115,26 @@ export class ProxyController {
   /**
    * 删除隧道
    */
-  async deleteProxy(req: AuthRequest, res: Response) {
+  async deleteProxy(req: AuthRequest, res: Response): Promise<void> {
     try {
       const { id } = req.params;
 
       // 检查隧道是否属于当前用户
       const proxy = await proxyService.getProxyById(parseInt(id));
       if (!proxy) {
-        return res.status(404).json({
+        res.status(404).json({
           success: false,
           message: '隧道不存在'
         });
+        return;
       }
 
       if (proxy.username !== req.user.username) {
-        return res.status(403).json({
+        res.status(403).json({
           success: false,
           message: '无权操作此隧道'
         });
+        return;
       }
 
       const success = await proxyService.deleteProxy(parseInt(id));
@@ -156,7 +161,7 @@ export class ProxyController {
   /**
    * 获取隧道配置
    */
-  async getProxyConfig(req: AuthRequest, res: Response) {
+  async getProxyConfig(req: AuthRequest, res: Response): Promise<void> {
     try {
       const { id } = req.params;
 

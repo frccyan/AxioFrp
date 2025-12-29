@@ -172,7 +172,7 @@ export class AuthService {
   /**
    * 检查用户权限
    */
-  async checkPermission(userId: number, requiredPermission: string): Promise<boolean> {
+  async checkPermission(userId: number, _requiredPermission: string): Promise<boolean> {
     const user = await userService.getUserById(userId);
     if (!user) {
       return false;

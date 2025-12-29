@@ -60,4 +60,6 @@ class Database {
   }
 }
 
-export default new Database();
+const databaseInstance = new Database();
+export default databaseInstance;
+export { databaseInstance as Database };

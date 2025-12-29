@@ -7,19 +7,20 @@ export class AuthController {
   /**
    * 用户登录
    */
-  async login(req: Request, res: Response) {
+  async login(req: Request, res: Response): Promise<void> {
     try {
       const { username, password } = req.body;
 
       if (!username || !password) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: '用户名和密码不能为空'
         });
+        return;
       }
 
       const result = await authService.login(username, password);
-      
+
       res.json({
         success: true,
         message: '登录成功',
@@ -36,29 +37,32 @@ export class AuthController {
   /**
    * 用户注册
    */
-  async register(req: Request, res: Response) {
+  async register(req: Request, res: Response): Promise<void> {
     try {
       const { username, email, password, confirmPassword } = req.body;
 
       if (!username || !email || !password) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: '用户名、邮箱和密码不能为空'
         });
+        return;
       }
 
       if (password !== confirmPassword) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: '两次输入的密码不一致'
         });
+        return;
       }
 
       if (password.length < 6) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: '密码长度至少6位'
         });
+        return;
       }
 
       const result = await authService.register({
@@ -83,15 +87,24 @@ export class AuthController {
   /**
    * 获取当前用户信息
    */
-  async getProfile(req: AuthRequest, res: Response) {
+  async getProfile(req: AuthRequest, res: Response): Promise<void> {
     try {
+      if (!req.user) {
+        res.status(401).json({
+          success: false,
+          message: '未认证'
+        });
+        return;
+      }
+
       const user = await userService.getUserById(req.user.userId);
-      
+
       if (!user) {
-        return res.status(404).json({
+        res.status(404).json({
           success: false,
           message: '用户不存在'
         });
+        return;
       }
 
       // 排除密码字段
@@ -112,29 +125,40 @@ export class AuthController {
   /**
    * 修改密码
    */
-  async changePassword(req: AuthRequest, res: Response) {
+  async changePassword(req: AuthRequest, res: Response): Promise<void> {
     try {
+      if (!req.user) {
+        res.status(401).json({
+          success: false,
+          message: '未认证'
+        });
+        return;
+      }
+
       const { oldPassword, newPassword, confirmPassword } = req.body;
 
       if (!oldPassword || !newPassword || !confirmPassword) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: '所有密码字段不能为空'
         });
+        return;
       }
 
       if (newPassword !== confirmPassword) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: '新密码和确认密码不一致'
         });
+        return;
       }
 
       if (newPassword.length < 6) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: '新密码长度至少6位'
         });
+        return;
       }
 
       await authService.changePassword(req.user.userId, oldPassword, newPassword);
@@ -154,25 +178,27 @@ export class AuthController {
   /**
    * 刷新token
    */
-  async refreshToken(req: AuthRequest, res: Response) {
+  async refreshToken(req: AuthRequest, res: Response): Promise<void> {
     try {
       const authHeader = req.headers.authorization;
       const oldToken = authHeader && authHeader.split(' ')[1];
 
       if (!oldToken) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: '令牌不能为空'
         });
+        return;
       }
 
       const newToken = authService.refreshToken(oldToken);
 
       if (!newToken) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: '令牌刷新失败'
         });
+        return;
       }
 
       res.json({
@@ -192,24 +218,26 @@ export class AuthController {
   /**
    * 忘记密码 - 发送重置邮件
    */
-  async forgotPassword(req: Request, res: Response) {
+  async forgotPassword(req: Request, res: Response): Promise<void> {
     try {
       const { email } = req.body;
 
       if (!email) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: '邮箱不能为空'
         });
+        return;
       }
 
       const user = await userService.getUserByEmail(email);
       if (!user) {
         // 出于安全考虑，不透露用户是否存在
-        return res.json({
+        res.json({
           success: true,
           message: '如果邮箱存在，重置邮件已发送'
         });
+        return;
       }
 
       // 生成重置token
@@ -233,38 +261,42 @@ export class AuthController {
   /**
    * 重置密码
    */
-  async resetPassword(req: Request, res: Response) {
+  async resetPassword(req: Request, res: Response): Promise<void> {
     try {
       const { token, newPassword, confirmPassword } = req.body;
 
       if (!token || !newPassword || !confirmPassword) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: '所有字段不能为空'
         });
+        return;
       }
 
       if (newPassword !== confirmPassword) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: '两次输入的密码不一致'
         });
+        return;
       }
 
       const payload = authService.verifyPasswordResetToken(token);
       if (!payload) {
-        return res.status(400).json({
+        res.status(400).json({
           success: false,
           message: '重置令牌无效或已过期'
         });
+        return;
       }
 
       const user = await userService.getUserByEmail(payload.email);
       if (!user) {
-        return res.status(404).json({
+        res.status(404).json({
           success: false,
           message: '用户不存在'
         });
+        return;
       }
 
       await authService.resetPassword(user.id, newPassword);
@@ -284,7 +316,7 @@ export class AuthController {
   /**
    * 退出登录
    */
-  async logout(req: AuthRequest, res: Response) {
+  async logout(_req: AuthRequest, res: Response): Promise<void> {
     // JWT是无状态的，客户端需要清除token
     res.json({
       success: true,

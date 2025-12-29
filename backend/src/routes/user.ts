@@ -1,4 +1,5 @@
-import { Router } from 'express';
+import { Router, Response } from 'express';
+import { AuthRequest } from '../middleware/auth.js';
 import userService from '../services/UserService.js';
 import { authenticateToken, requireAdmin, requireSelfOrAdmin } from '../middleware/auth.js';
 
@@ -10,9 +11,9 @@ router.use(authenticateToken);
 /**
  * 获取用户列表（管理员功能）
  */
-router.get('/', requireAdmin, async (req, res) => {
+router.get('/', requireAdmin, async (_req: AuthRequest, res: Response) => {
   try {
-    const { page = 1, limit = 20 } = req.query;
+    const { page = 1, limit = 20 } = _req.query;
     const result = await userService.getUsers(
       parseInt(page as string),
       parseInt(limit as string)
@@ -33,16 +34,17 @@ router.get('/', requireAdmin, async (req, res) => {
 /**
  * 获取用户详情
  */
-router.get('/:username', requireSelfOrAdmin, async (req, res) => {
+router.get('/:username', requireSelfOrAdmin, async (_req: AuthRequest, res: Response) => {
   try {
-    const { username } = req.params;
+    const { username } = _req.params;
     const user = await userService.getUserByUsername(username);
 
     if (!user) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         message: '用户不存在'
       });
+      return;
     }
 
     // 排除密码字段
@@ -63,26 +65,28 @@ router.get('/:username', requireSelfOrAdmin, async (req, res) => {
 /**
  * 更新用户信息（管理员或用户自己）
  */
-router.put('/:username', requireSelfOrAdmin, async (req, res) => {
+router.put('/:username', requireSelfOrAdmin, async (_req: AuthRequest, res: Response) => {
   try {
-    const { username } = req.params;
-    const updateData = req.body;
+    const { username } = _req.params;
+    const updateData = _req.body;
 
     const user = await userService.getUserByUsername(username);
     if (!user) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         message: '用户不存在'
       });
+      return;
     }
 
     const updatedUser = await userService.updateUser(user.id, updateData);
 
     if (!updatedUser) {
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
         message: '更新用户信息失败'
       });
+      return;
     }
 
     // 排除密码字段
@@ -104,9 +108,9 @@ router.put('/:username', requireSelfOrAdmin, async (req, res) => {
 /**
  * 删除用户（管理员功能）
  */
-router.delete('/:username', requireAdmin, async (req, res) => {
+router.delete('/:username', requireAdmin, async (_req: AuthRequest, res: Response) => {
   try {
-    const { username } = req.params;
+    const { username } = _req.params;
     
     const user = await userService.getUserByUsername(username);
     if (!user) {

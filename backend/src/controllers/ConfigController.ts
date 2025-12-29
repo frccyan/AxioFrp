@@ -1,7 +1,7 @@
-import { Request, Response } from 'express';
-import { ConfigService } from '../services/ConfigService';
-import { EmailService } from '../services/EmailService';
-import { AuthMiddleware } from '../middleware/auth';
+import { Response } from 'express';
+import { AuthRequest } from '../middleware/auth.js';
+import { ConfigService } from '../services/ConfigService.js';
+import { EmailService } from '../services/EmailService.js';
 
 export class ConfigController {
     private configService: ConfigService;
@@ -15,7 +15,7 @@ export class ConfigController {
     /**
      * 获取所有配置项（分类显示）
      */
-    public getConfigs = async (req: Request, res: Response) => {
+    public getConfigs = async (_req: AuthRequest, res: Response): Promise<void> => {
         try {
             const configs = await this.configService.getConfigs();
             res.json({
@@ -35,9 +35,9 @@ export class ConfigController {
     /**
      * 获取指定分类的配置
      */
-    public getConfigsByCategory = async (req: Request, res: Response) => {
+    public getConfigsByCategory = async (_req: AuthRequest, res: Response): Promise<void> => {
         try {
-            const { category } = req.params;
+            const { category } = _req.params;
             const configs = await this.configService.getConfigsByCategory(category);
             res.json({
                 success: true,
@@ -56,7 +56,7 @@ export class ConfigController {
     /**
      * 更新配置项
      */
-    public updateConfigs = async (req: Request, res: Response) => {
+    public updateConfigs = async (req: AuthRequest, res: Response): Promise<void> => {
         try {
             const updates = req.body;
             const username = req.user?.username || 'system';
@@ -64,11 +64,12 @@ export class ConfigController {
             // 验证配置项
             const validationResult = await this.configService.validateConfigs(updates);
             if (!validationResult.valid) {
-                return res.status(400).json({
+                res.status(400).json({
                     success: false,
                     message: '配置验证失败',
                     errors: validationResult.errors
                 });
+                return;
             }
 
             // 更新配置
@@ -94,7 +95,7 @@ export class ConfigController {
     /**
      * 更新单个配置项
      */
-    public updateConfig = async (req: Request, res: Response) => {
+    public updateConfig = async (req: AuthRequest, res: Response): Promise<void> => {
         try {
             const { key } = req.params;
             const { value, reason } = req.body;
@@ -103,10 +104,11 @@ export class ConfigController {
             // 验证单个配置项
             const validationResult = await this.configService.validateConfig(key, value);
             if (!validationResult.valid) {
-                return res.status(400).json({
+                res.status(400).json({
                     success: false,
                     message: validationResult.error
                 });
+                return;
             }
 
             // 更新配置
@@ -132,7 +134,7 @@ export class ConfigController {
     /**
      * 重置配置到默认值
      */
-    public resetConfig = async (req: Request, res: Response) => {
+    public resetConfig = async (req: AuthRequest, res: Response): Promise<void> => {
         try {
             const { key } = req.params;
             const username = req.user?.username || 'system';
@@ -159,7 +161,7 @@ export class ConfigController {
     /**
      * 获取配置变更历史
      */
-    public getConfigHistory = async (req: Request, res: Response) => {
+    public getConfigHistory = async (req: AuthRequest, res: Response): Promise<void> => {
         try {
             const { key } = req.params;
             const { page = 1, limit = 20 } = req.query;
@@ -187,21 +189,22 @@ export class ConfigController {
     /**
      * 测试邮件配置
      */
-    public testEmailConfig = async (req: Request, res: Response) => {
+    public testEmailConfig = async (req: AuthRequest, res: Response): Promise<void> => {
         try {
             const { to } = req.body;
             const username = req.user?.username || 'system';
 
             if (!to) {
-                return res.status(400).json({
+                res.status(400).json({
                     success: false,
                     message: '请提供测试邮箱地址'
                 });
+                return;
             }
 
             // 获取当前邮件配置
             const emailConfig = await this.configService.getEmailConfig();
-            
+
             // 临时更新邮件配置进行测试
             this.emailService.updateConfig(emailConfig);
 
@@ -233,10 +236,10 @@ export class ConfigController {
     /**
      * 导出配置
      */
-    public exportConfigs = async (req: Request, res: Response) => {
+    public exportConfigs = async (_req: AuthRequest, res: Response): Promise<void> => {
         try {
             const configs = await this.configService.getAllConfigs();
-            
+
             // 过滤敏感信息
             const exportData = configs.filter(config => !config.setting_key.includes('password') && !config.setting_key.includes('secret'));
 
@@ -258,31 +261,33 @@ export class ConfigController {
     /**
      * 导入配置
      */
-    public importConfigs = async (req: Request, res: Response) => {
+    public importConfigs = async (req: AuthRequest, res: Response): Promise<void> => {
         try {
             const { configs } = req.body;
             const username = req.user?.username || 'system';
 
             if (!Array.isArray(configs)) {
-                return res.status(400).json({
+                res.status(400).json({
                     success: false,
                     message: '配置数据格式错误'
                 });
+                return;
             }
 
             // 验证配置项
-            const updates = {};
-            configs.forEach(config => {
+            const updates: Record<string, any> = {};
+            configs.forEach((config: any) => {
                 updates[config.setting_key] = config.setting_value;
             });
 
             const validationResult = await this.configService.validateConfigs(updates);
             if (!validationResult.valid) {
-                return res.status(400).json({
+                res.status(400).json({
                     success: false,
                     message: '配置验证失败',
                     errors: validationResult.errors
                 });
+                return;
             }
 
             // 导入配置
@@ -308,10 +313,10 @@ export class ConfigController {
     /**
      * 获取系统状态
      */
-    public getSystemStatus = async (req: Request, res: Response) => {
+    public getSystemStatus = async (_req: AuthRequest, res: Response): Promise<void> => {
         try {
             const status = await this.configService.getSystemStatus();
-            
+
             res.json({
                 success: true,
                 data: status,
@@ -329,7 +334,7 @@ export class ConfigController {
     /**
      * 备份配置
      */
-    public backupConfigs = async (req: Request, res: Response) => {
+    public backupConfigs = async (req: AuthRequest, res: Response): Promise<void> => {
         try {
             const username = req.user?.username || 'system';
             const backup = await this.configService.backupConfigs(username);
@@ -351,7 +356,7 @@ export class ConfigController {
     /**
      * 恢复配置
      */
-    public restoreConfigs = async (req: Request, res: Response) => {
+    public restoreConfigs = async (req: AuthRequest, res: Response): Promise<void> => {
         try {
             const { backupId } = req.body;
             const username = req.user?.username || 'system';

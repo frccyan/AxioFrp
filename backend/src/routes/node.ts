@@ -1,4 +1,5 @@
-import { Router } from 'express';
+import { Router, Response } from 'express';
+import { AuthRequest } from '../middleware/auth.js';
 import { authenticateToken, requireAdmin } from '../middleware/auth.js';
 
 const router = Router();
@@ -9,7 +10,7 @@ router.use(authenticateToken);
 /**
  * 获取节点列表
  */
-router.get('/', async (req, res) => {
+router.get('/', async (_req: AuthRequest, res: Response) => {
   try {
     // TODO: 实现节点服务
     const nodes = [
@@ -40,9 +41,9 @@ router.get('/', async (req, res) => {
 /**
  * 获取节点详情
  */
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (_req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
+    const { id } = _req.params;
     
     // TODO: 实现节点服务
     const node = {
@@ -57,13 +58,6 @@ router.get('/:id', async (req, res) => {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
-
-    if (!node) {
-      return res.status(404).json({
-        success: false,
-        message: '节点不存在'
-      });
-    }
 
     res.json({
       success: true,
@@ -80,7 +74,7 @@ router.get('/:id', async (req, res) => {
 /**
  * 创建节点（管理员功能）
  */
-router.post('/', requireAdmin, async (req, res) => {
+router.post('/', requireAdmin, async (req: AuthRequest, res: Response) => {
   try {
     const { name, address, port, token, max_connections, region } = req.body;
 
@@ -138,13 +132,6 @@ router.put('/:id', requireAdmin, async (req, res) => {
       current_connections: 150,
       ...updateData
     };
-
-    if (!node) {
-      return res.status(404).json({
-        success: false,
-        message: '节点不存在'
-      });
-    }
 
     res.json({
       success: true,

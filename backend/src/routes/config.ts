@@ -1,14 +1,13 @@
 import { Router } from 'express';
-import { ConfigController } from '../controllers/ConfigController';
-import { AuthMiddleware } from '../middleware/auth';
-import { AdminMiddleware } from '../middleware/admin';
+import { ConfigController } from '../controllers/ConfigController.js';
+import { authenticateToken, requireAdmin } from '../middleware/auth.js';
 
 const router = Router();
 const configController = new ConfigController();
 
 // 所有配置管理路由都需要管理员权限
-router.use(AuthMiddleware.authenticate);
-router.use(AdminMiddleware.requireAdmin);
+router.use(authenticateToken);
+router.use(requireAdmin);
 
 /**
  * @route   GET /api/config

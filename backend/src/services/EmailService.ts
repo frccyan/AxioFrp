@@ -54,7 +54,7 @@ export class EmailService {
         if (!this.config) return;
 
         try {
-            this.transporter = nodemailer.createTransporter({
+            this.transporter = nodemailer.createTransport({
                 host: this.config.smtp_host,
                 port: parseInt(this.config.smtp_port),
                 secure: this.config.smtp_secure === 'true',
@@ -65,7 +65,7 @@ export class EmailService {
             });
 
             // 验证连接
-            await this.transporter.verify();
+            await this.transporter!.verify();
             console.log('邮件服务初始化成功');
         } catch (error) {
             console.error('邮件服务初始化失败:', error);

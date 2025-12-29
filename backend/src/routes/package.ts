@@ -71,13 +71,14 @@ router.use(authenticateToken);
 router.post('/purchase', async (req: any, res) => {
   try {
     const { package_id } = req.body;
-    const { username } = req.user;
+    const { username } = req.user || { username: '' };
 
     if (!package_id) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         message: '套餐ID不能为空'
       });
+      return;
     }
 
     // TODO: 实现套餐购买逻辑
@@ -114,7 +115,7 @@ router.post('/purchase', async (req: any, res) => {
  */
 router.get('/orders', async (req: any, res) => {
   try {
-    const { username } = req.user;
+    const { username } = req.user || { username: '' };
     const { page = 1, limit = 10 } = req.query;
 
     // TODO: 实现订单查询
